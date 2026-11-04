@@ -10,22 +10,24 @@ option(ENABLE_PERFORMANCE "Enable performance subproject" OFF)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_subdirectory(lib/)
+add_subdirectory(lib)
 
 if(ENABLE_TEST)
 	enable_testing()
-	add_subdirectory(test/)
+	add_subdirectory(test)
 endif()
 
 add_subdirectory(sample/)
 
 if(ENABLE_PERFORMANCE)
-	add_subdirectory(performance/)
+	add_subdirectory(performance)
 endif()
 
-target_compile_options(EventBus PUBLIC
+if(NOT MSVC)
+	target_compile_options(EventBus PRIVATE
 	-Wall -pedantic
 	-Wnon-virtual-dtor
 	-Werror
 	-Wno-error=deprecated-declarations
 	)
+endif()
