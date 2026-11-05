@@ -10,9 +10,9 @@ set(SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/sources/AsyncEventBus.cpp
 )
 
-add_library(${CMAKE_PROJECT_NAME} ${SOURCES})
-add_library(Dexode::EventBus ALIAS ${CMAKE_PROJECT_NAME})
+add_library(${PROJECT_NAME} ${SOURCES})
+add_library(Dexode::EventBus ALIAS ${PROJECT_NAME})
 
-target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
+target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
