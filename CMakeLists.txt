@@ -9,4 +9,4 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_library(EventBus sources/AsyncEventBus.cpp)
 add_library(Dexode::EventBus ALIAS EventBus)
 
-target_include_directories(EventBus PRIVATE include)
+target_include_directories(EventBus PUBLIC include)
