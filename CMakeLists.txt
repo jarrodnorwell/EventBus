@@ -6,13 +6,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/sources/AsyncEventBus.cpp
-)
+add_library(EventBus sources/AsyncEventBus.cpp)
+add_library(Dexode::EventBus ALIAS EventBus)
 
-add_library(${PROJECT_NAME} ${SOURCES})
-add_library(Dexode::EventBus ALIAS ${PROJECT_NAME})
-
-target_include_directories(${PROJECT_NAME} PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-)
+target_include_directories(EventBus PRIVATE include)
