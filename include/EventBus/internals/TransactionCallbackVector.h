@@ -4,7 +4,7 @@
 #include <functional>
 #include <vector>
 
-#include "EventBus/internal/CallbackVector.h"
+#include "eventbus/internals/CallbackVector.h"
 
 namespace Dexode
 {

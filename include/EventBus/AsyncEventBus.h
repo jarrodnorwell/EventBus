@@ -11,8 +11,9 @@
 #include <memory>
 #include <mutex>
 
-#include "EventBus/internal/AsyncCallbackVector.h"
-#include "EventBus/internal/common.h"
+#include "eventbus/internals/AsyncCallbackVector.h"
+#include "eventbus/utilities/identifier.h"
+#include "eventbus/utilities/validate.h"
 
 namespace Dexode
 {
@@ -51,7 +52,7 @@ public:
 	template <typename Event>
 	int listen(std::function<void(const Event&)> callback)
 	{
-		static_assert(Internal::validateEvent<Event>(), "Invalid event");
+		static_assert(dexode::eventbus::utilities::validate<Event>(), "Invalid event");
 
 		const int token = newToken();
 		listen<Event>(token, std::move(callback));
@@ -70,7 +71,7 @@ public:
 	template <typename Event>
 	void listen(const int token, std::function<void(const Event&)> callback)
 	{
-		static_assert(Internal::validateEvent<Event>(), "Invalid event");
+		static_assert(dexode::eventbus::utilities::validate<Event>(), "Invalid event");
 
 		std::lock_guard<std::mutex> guard {_eventMutex};
 		_commandsQueue.push_back([this, token, callback = std::move(callback)]() {
@@ -81,7 +82,7 @@ public:
 			assert(callback && "callback should be valid"); //Check for valid object
 
 			std::unique_ptr<Internal::CallbackVector>& vector =
-				_callbacks[Internal::type_id<Event>()];
+				_callbacks[dexode::eventbus::utilities::identifier<Event>()];
 			if(vector == nullptr)
 			{
 				vector.reset(new Vector {});
@@ -120,13 +121,13 @@ public:
 	template <typename Event>
 	void unlisten(const int token)
 	{
-		static_assert(Internal::validateEvent<Event>(), "Invalid event");
+		static_assert(dexode::eventbus::utilities::validate<Event>(), "Invalid event");
 
 		std::lock_guard<std::mutex> guard {_eventMutex};
 		_commandsQueue.push_back([this, token]() {
 			std::lock_guard<std::mutex> guard {_callbacksMutex};
 
-			auto found = _callbacks.find(Internal::type_id<Event>);
+			auto found = _callbacks.find(dexode::eventbus::utilities::identifier<Event>());
 			if(found != _callbacks.end())
 			{
 				found->second->remove(token);
@@ -142,7 +143,7 @@ public:
 	template <typename Event>
 	void schedule(Event event)
 	{
-		static_assert(Internal::validateEvent<Event>(), "Invalid event");
+		static_assert(dexode::eventbus::utilities::validate<Event>(), "Invalid event");
 		_eventWaiting.notify_one();
 
 		std::lock_guard<std::mutex> guard {_eventMutex};
@@ -150,7 +151,7 @@ public:
 			std::lock_guard<std::mutex> guard {_callbacksMutex};
 
 			using Vector = Internal::AsyncCallbackVector<Event>;
-			auto found = _callbacks.find(Internal::type_id<Event>());
+			auto found = _callbacks.find(dexode::eventbus::utilities::identifier<Event>());
 			if(found == _callbacks.end())
 			{
 				return; // no such notifications
@@ -206,7 +207,7 @@ private:
 	std::size_t processCommandsAndGetQueuedEventsCount();
 
 	int _tokener = 0;
-	std::map<Internal::type_id_t, std::unique_ptr<Internal::CallbackVector>> _callbacks;
+	std::map<size_t, std::unique_ptr<Internal::CallbackVector>> _callbacks;
 	mutable std::mutex _callbacksMutex;
 	mutable std::mutex _eventMutex;
 

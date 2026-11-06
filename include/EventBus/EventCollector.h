@@ -4,10 +4,8 @@
 
 #pragma once
 
-#include <memory>
-
-#include "EventBus/EventBus.h"
-#include "EventBus/TokenHolder.h"
+#include "eventbus/EventBus.h"
+#include "eventbus/TokenHolder.h"
 
 namespace Dexode
 {
