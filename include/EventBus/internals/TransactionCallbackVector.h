@@ -12,6 +12,14 @@ namespace eventbus {
 
 		template <typename Event>
 		struct TransactionCallbackVector : public CallbackVector {
+			using CallbackType = std::function<void(const Event)>;
+			using ContainerElement = std::pair<int, CallbackType>;
+			using ContainerType = std::vector<ContainerElement>;
+			
+			ContainerType container, to_add;
+			int transaction_index{0};
+			std::vector<int> to_remove;
+
 			virtual void remove(const int token) override {
 				if (transaction_index > 0) {
 					to_remove.push_back(token);
@@ -50,10 +58,6 @@ namespace eventbus {
 					to_remove.clear();
 				}
 			};
-
-			ContainerType container, to_add;
-			int transaction_index{0};
-			std::vector<int> to_remove;
 		};
 
 	};

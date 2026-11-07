@@ -12,6 +12,11 @@ namespace eventbus {
 
 		template <typename Event>
 		struct AsyncCallbackVector : public CallbackVector {
+			using CallbackType = std::function<void(const Event)>;
+			using ContainerElement = std::pair<int, CallbackType>;
+
+			std::vector<ContainerElement> container;
+
 			virtual void remove(const int token) override {
 				container.erase(std::remove_if(container.begin(), container.end(), [token](auto element) {
 					return element.first == token;
