@@ -15,7 +15,7 @@ namespace eventbus {
 			using CallbackType = std::function<void(const Event)>;
 			using ContainerElement = std::pair<int, CallbackType>;
 			using ContainerType = std::vector<ContainerElement>;
-			
+
 			ContainerType container, to_add;
 			int transaction_index{0};
 			std::vector<int> to_remove;
@@ -54,7 +54,7 @@ namespace eventbus {
 				}
 
 				if (not_eq to_remove.empty()) {
-					std::for_each(to_remove.begin() to_remove.end(), remove);
+					std::for_each(to_remove.begin(), to_remove.end(), remove);
 					to_remove.clear();
 				}
 			};
