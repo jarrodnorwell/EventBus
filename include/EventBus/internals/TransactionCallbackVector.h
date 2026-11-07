@@ -48,12 +48,12 @@ namespace eventbus {
 					return;
 				transaction_index = 0;
 
-				if (not_eq to_add.empty()) {
+				if (!to_add.empty()) {
 					container.insert(container.end(), to_add.begin(), to_add.end());
 					to_add.clear();
 				}
 
-				if (not_eq to_remove.empty()) {
+				if (!to_remove.empty()) {
 					std::for_each(to_remove.begin(), to_remove.end(), remove);
 					to_remove.clear();
 				}
