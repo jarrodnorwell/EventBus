@@ -1,16 +1,26 @@
 #pragma once
 
-namespace Dexode
-{
-namespace Internal
-{
+#include <functional>
+#include <utility>
+#include <vector>
 
-struct CallbackVector
-{
-	virtual ~CallbackVector() = default;
+struct Event;
 
-	virtual void remove(const int token) = 0;
+namespace eventbus {
+
+	namespace internals {
+
+		struct CallbackVector {
+			virtual ~CallbackVector() = default;
+			virtual void remove(const int) = 0;
+
+			using CallbackType = std::function<void(const Event)>;
+			using ContainerElement = std::pair<int, CallbackType>;
+			using ContainerType = std::vector<ContainerElement>;
+
+			std::vector<ContainerElement> container;
+		};
+
+	};
+
 };
-
-} // namespace Internal
-} // namespace Dexode

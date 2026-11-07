@@ -1,40 +1,28 @@
 #pragma once
 
+#include "eventbus/internals/CallbackVector.h"
+
 #include <algorithm>
 #include <functional>
 #include <vector>
 
-#include "eventbus/internals/CallbackVector.h"
+namespace eventbus {
 
-namespace Dexode
-{
-namespace Internal
-{
+	namespace internals {
 
-template <typename Event>
-struct AsyncCallbackVector : public CallbackVector
-{
-	using CallbackType = std::function<void(const Event&)>;
-	using ContainerElement = std::pair<int, CallbackType>;
-	std::vector<ContainerElement> container;
+		template <typename Event>
+		struct AsyncCallbackVector : public CallbackVector {
+			virtual void remove(const int token) override {
+				container.erase(std::remove_if(container.begin(), container.end(), [token](auto element) {
+					return element.first == token;
+				}), container.end());
+			};
+			
+			void add(const int token, CallbackType type) {
+				container.emplace_back(token, std::move(type));
+			};
+		};
 
-	virtual void remove(const int token) override
-	{
-		auto removeFrom = std::remove_if(
-			container.begin(), container.end(), [token](const ContainerElement& element) {
-				return element.first == token;
-			});
-		if(removeFrom != container.end())
-		{
-			container.erase(removeFrom, container.end());
-		}
-	}
+	};
 
-	void add(const int token, CallbackType callback)
-	{
-		container.emplace_back(token, std::move(callback));
-	}
 };
-
-} // namespace Internal
-} // namespace Dexode

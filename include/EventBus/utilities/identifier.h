@@ -1,16 +1,12 @@
 #pragma once
 
-namespace dexode {
+namespace eventbus {
 
-    namespace eventbus {
+    namespace utilities {
 
-        namespace utilities {
-
-            template <typename T>
-            size_t identifier() {
-                return typeid(T).hash_code();
-            };
-
+        template <typename T>
+        size_t identifier() {
+            return typeid(T).hash_code();
         };
 
     };

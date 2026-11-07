@@ -39,7 +39,7 @@ public:
 	template <typename Event>
 	int listen(const std::function<void(const Event&)>& callback)
 	{
-		static_assert(dexode::eventbus::utilities::validate<Event>(), "Invalid event");
+		static_assert(eventbus::utilities::validate<Event>(), "Invalid event");
 
 		const int token = ++_tokener;
 		listen<Event>(token, callback);
@@ -54,13 +54,13 @@ public:
 	template <typename Event>
 	void listen(const int token, const std::function<void(const Event&)>& callback)
 	{
-		static_assert(dexode::eventbus::utilities::validate<Event>(), "Invalid event");
+		static_assert(eventbus::utilities::validate<Event>(), "Invalid event");
 
-		using Vector = Internal::TransactionCallbackVector<Event>;
+		using Vector = eventbus::internals::TransactionCallbackVector<Event>;
 
 		assert(callback && "callback should be valid"); //Check for valid object
 
-		std::unique_ptr<Internal::CallbackVector>& vector = _callbacks[dexode::eventbus::utilities::identifier<Event>()];
+		std::unique_ptr<eventbus::internals::CallbackVector>& vector = _callbacks[eventbus::utilities::identifier<Event>()];
 		if(vector == nullptr)
 		{
 			vector.reset(new Vector {});
@@ -88,9 +88,9 @@ public:
 	template <typename Event>
 	void unlisten(const int token)
 	{
-		static_assert(dexode::eventbus::utilities::validate<Event>(), "Invalid event");
+		static_assert(eventbus::utilities::validate<Event>(), "Invalid event");
 
-		auto found = _callbacks.find(dexode::eventbus::utilities::identifier<Event>());
+		auto found = _callbacks.find(eventbus::utilities::identifier<Event>());
 		if(found != _callbacks.end())
 		{
 			found->second->remove(token);
@@ -106,30 +106,30 @@ public:
 	void notify(const Event& event)
 	{
 		using CleanEventType = typename std::remove_const<Event>::type;
-		static_assert(dexode::eventbus::utilities::validate<Event>(), "Invalid event");
+		static_assert(eventbus::utilities::validate<Event>(), "Invalid event");
 
-		using Vector = Internal::TransactionCallbackVector<CleanEventType>;
-		auto found = _callbacks.find(dexode::eventbus::utilities::identifier<CleanEventType>());
+		using Vector = eventbus::internals::TransactionCallbackVector<CleanEventType>;
+		auto found = _callbacks.find(eventbus::utilities::identifier<CleanEventType>());
 		if(found == _callbacks.end())
 		{
 			return; // no such notifications
 		}
 
-		std::unique_ptr<Internal::CallbackVector>& vector = found->second;
+		std::unique_ptr<eventbus::internals::CallbackVector>& vector = found->second;
 		assert(dynamic_cast<Vector*>(vector.get()));
 		Vector* vectorImpl = static_cast<Vector*>(vector.get());
 
-		vectorImpl->beginTransaction();
+		vectorImpl->begin();
 		for(const auto& element : vectorImpl->container)
 		{
 			element.second(event);
 		}
-		vectorImpl->commitTransaction();
+		vectorImpl->commit();
 	}
 
 private:
 	int _tokener = 0;
-	std::map<size_t, std::unique_ptr<Internal::CallbackVector>> _callbacks;
+	std::map<size_t, std::unique_ptr<eventbus::internals::CallbackVector>> _callbacks;
 };
 
 } /* namespace Dexode */

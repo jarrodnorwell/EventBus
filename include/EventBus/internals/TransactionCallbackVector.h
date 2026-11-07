@@ -1,87 +1,61 @@
 #pragma once
 
+#include "eventbus/internals/CallbackVector.h"
+
 #include <algorithm>
 #include <functional>
 #include <vector>
 
-#include "eventbus/internals/CallbackVector.h"
+namespace eventbus {
 
-namespace Dexode
-{
-namespace Internal
-{
+	namespace internals {
 
-template <typename Event>
-struct TransactionCallbackVector : public CallbackVector
-{
-	using CallbackType = std::function<void(const Event&)>;
-	using ContainerElement = std::pair<int, CallbackType>;
-	using ContainerType = std::vector<ContainerElement>;
-	ContainerType container;
-	ContainerType toAdd;
-	std::vector<int> toRemove;
-	int inTransaction = 0;
+		template <typename Event>
+		struct TransactionCallbackVector : public CallbackVector {
+			virtual void remove(const int token) override {
+				if (transaction_index > 0) {
+					to_remove.push_back(token);
+					return;
+				}
 
-	virtual void remove(const int token) override
-	{
-		if(inTransaction > 0)
-		{
-			toRemove.push_back(token);
-			return;
-		}
+				container.erase(std::remove_if(container.begin(), container.end(), [token](auto& element) {
+					return element.first == token;
+				}), container.end());
+			};
 
-		//Invalidation rules: https://stackoverflow.com/questions/6438086/iterator-invalidation-rules
-		auto removeFrom = std::remove_if(
-			container.begin(), container.end(), [token](const ContainerElement& element) {
-				return element.first == token;
-			});
-		if(removeFrom != container.end())
-		{
-			container.erase(removeFrom, container.end());
-		}
-	}
+			void add(const int token, CallbackType type) {
+				if (transaction_index > 0)
+					to_add.emplace_back(token, type);
+				else
+					container.emplace_back(token, type);
+			};
 
-	void add(const int token, const CallbackType& callback)
-	{
-		if(inTransaction > 0)
-		{
-			toAdd.emplace_back(token, callback);
-		}
-		else
-		{
-			container.emplace_back(token, callback);
-		}
-	}
+			void begin() {
+				++transaction_index;
+			};
 
-	void beginTransaction()
-	{
-		++inTransaction;
-	}
+			void commit() {
+				--transaction_index;
+				if (transaction_index > 0)
+					return;
+				transaction_index = 0;
 
-	void commitTransaction()
-	{
-		--inTransaction;
-		if(inTransaction > 0)
-		{
-			return;
-		}
-		inTransaction = 0;
+				if (not_eq to_add.empty()) {
+					container.insert(container.end(), to_add.begin(), to_add.end());
+					to_add.clear();
+				}
 
-		if(toAdd.empty() == false)
-		{
-			container.insert(container.end(), toAdd.begin(), toAdd.end());
-			toAdd.clear();
-		}
-		if(toRemove.empty() == false)
-		{
-			for(auto token : toRemove)
-			{
-				remove(token);
-			}
-			toRemove.clear();
-		}
-	}
+				if (not_eq to_remove.empty()) {
+					std::for_each(to_remove.begin() to_remove.end(), remove);
+					to_remove.clear();
+				}
+			};
+
+			ContainerType container, to_add;
+			int transaction_index{0};
+			std::vector<int> to_remove;
+		};
+
+	};
+
 };
-
-} // namespace Internal
-} // namespace Dexode
