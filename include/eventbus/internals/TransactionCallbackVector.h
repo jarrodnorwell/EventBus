@@ -48,7 +48,9 @@ namespace eventbus {
 				}
 
 				if (!to_remove.empty()) {
-					std::for_each(to_remove.begin(), to_remove.end(), this->remove);
+					std::for_each(to_remove.begin(), to_remove.end(), [this](auto& element) {
+						this->remove(token);
+					});
 					to_remove.clear();
 				}
 			};
