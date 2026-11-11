@@ -1,55 +1,49 @@
 #include "eventbus/AsyncEventBus.h"
 
-namespace Dexode
-{
+namespace eventbus {
 
-std::size_t AsyncEventBus::processCommandsAndGetQueuedEventsCount()
-{
-	std::lock_guard<std::mutex> guard {_eventMutex};
-	while(_commandsQueue.empty() == false)
-	{
-		_commandsQueue
-			.front()(); //This can't add any extra commands, because in this queue we story only listen/unlisten stuff
-		_commandsQueue.pop_front();
-	}
-	//Yeah we want to return events count. So don't have to call getQueueEventCount
-	return _eventQueue.size();
-}
+	std::size_t AsyncEventBus::processCommandsAndGetQueuedEventsCount() {
+		std::lock_guard lock{event_mutex};
 
-int AsyncEventBus::consume(int max)
-{
-	int consumed = 0;
+		while (!_commandsQueue.empty()) {
+			_commandsQueue.front()();
+			_commandsQueue.pop_front();
+		};
 
-	std::function<void()> eventCommand;
-	while(processCommandsAndGetQueuedEventsCount() > 0 && consumed < max) //order is important
-	{
-		{
-			std::lock_guard<std::mutex> guard {_eventMutex};
-			eventCommand = std::move(_eventQueue.front());
-			_eventQueue.pop_front();
-		}
+		return _eventQueue.size();
+	};
 
-		eventCommand();
-		++consumed;
-	}
+	int AsyncEventBus::consume(int max) {
+		int consumed = 0;
+		std::function<void()> event_command;
 
-	return consumed;
-}
+		while(processCommandsAndGetQueuedEventsCount() > 0 && consumed < max) {
+			{
+				std::lock_guard<std::mutex> lock{event_mutex};
 
-bool AsyncEventBus::wait()
-{
-	using namespace std::chrono_literals;
-	std::unique_lock<std::mutex> lock(_waitMutex);
-	_eventWaiting.wait(lock);
-	return !_eventQueue.empty();
-}
-bool AsyncEventBus::waitFor(std::chrono::milliseconds timeout)
-{
-	using namespace std::chrono_literals;
-	std::unique_lock<std::mutex> lock(_waitMutex);
-	_eventWaiting.wait_for(lock, timeout);
+				event_command = std::move(_eventQueue.front());
+				_eventQueue.pop_front();
+			}
 
-	return !_eventQueue.empty();
-}
+			event_command();
+			++consumed;
+		};
 
-} // namespace Dexode
+		return consumed;
+	};
+
+	bool AsyncEventBus::wait() {
+		std::unique_lock<std::mutex> lock{wait_mutex};
+		_eventWaiting.wait(lock);
+
+		return !_eventQueue.empty();
+	};
+
+	bool AsyncEventBus::waitFor(std::chrono::milliseconds timeout) {
+		std::unique_lock<std::mutex> lock{wait_mutex};
+		_eventWaiting.wait_for(lock, timeout);
+
+		return !_eventQueue.empty();
+	};
+
+};

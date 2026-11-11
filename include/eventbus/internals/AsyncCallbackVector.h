@@ -15,10 +15,8 @@ namespace eventbus {
 			using CallbackType = std::function<void(const Event)>;
 			using ContainerElement = std::pair<int, CallbackType>;
 
-			std::vector<ContainerElement> container;
-
-			virtual void remove(const int token) override {
-				container.erase(std::remove_if(container.begin(), container.end(), [token](auto element) {
+			void remove(const int token) override {
+				container.erase(std::remove_if(container.begin(), container.end(), [token](auto& element) {
 					return element.first == token;
 				}), container.end());
 			};
@@ -26,6 +24,8 @@ namespace eventbus {
 			void add(const int token, CallbackType type) {
 				container.emplace_back(token, std::move(type));
 			};
+			
+			std::vector<ContainerElement> container;
 		};
 
 	};

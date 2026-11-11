@@ -16,15 +16,9 @@ namespace eventbus {
 			using ContainerElement = std::pair<int, CallbackType>;
 			using ContainerType = std::vector<ContainerElement>;
 
-			ContainerType container, to_add;
-			int transaction_index{0};
-			std::vector<int> to_remove;
-
-			virtual void remove(const int token) override {
-				if (transaction_index > 0) {
-					to_remove.push_back(token);
-					return;
-				}
+			void remove(const int token) override {
+				if (transaction_index > 0)
+					return to_remove.push_back(token);
 
 				container.erase(std::remove_if(container.begin(), container.end(), [token](auto& element) {
 					return element.first == token;
@@ -54,12 +48,14 @@ namespace eventbus {
 				}
 
 				if (!to_remove.empty()) {
-					std::for_each(to_remove.begin(), to_remove.end(), [this](auto& token) {
-						this->remove(token);
-					});
+					std::for_each(to_remove.begin(), to_remove.end(), this->remove);
 					to_remove.clear();
 				}
 			};
+			
+			ContainerType container, to_add;
+			int transaction_index{0};
+			std::vector<int> to_remove;
 		};
 
 	};

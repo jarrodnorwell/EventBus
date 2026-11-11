@@ -1,9 +1,5 @@
 #pragma once
 
-#include <functional>
-#include <utility>
-#include <vector>
-
 namespace eventbus {
 
 	namespace internals {
